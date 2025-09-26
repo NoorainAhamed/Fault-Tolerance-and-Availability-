@@ -1,0 +1,49 @@
+## FAULT - TOLERANCE
+
+Here are the step-by-step instructions to create multiple drives (partitions) on Windows 7 using the built-in Disk Management tool:
+
+1. Back Up Important Data
+
+Partitioning usually doesn’t erase existing data if done carefully, but a backup is always safest.
+
+2. Open Disk Management
+
+Click Start → Control Panel → System and Security → Administrative Tools → Computer Management.
+
+In the left pane, select Disk Management under “Storage.”
+
+3. Shrink the Existing Partition
+
+You need unallocated space before you can create new drives.
+
+Right-click the main drive (usually C:) and choose Shrink Volume.
+
+Enter the amount of space to shrink in MB (e.g., 50 000 MB ≈ 50 GB) and click Shrink.
+
+You’ll now see Unallocated space.
+
+4. Create a New Partition (Drive)
+
+Right-click the Unallocated space and select New Simple Volume.
+
+The wizard opens:
+
+Specify Volume Size → set size for this partition.
+
+Assign Drive Letter or Path → choose a letter (e.g., D).
+
+Format Partition → select NTFS and choose a volume label (name).
+
+Click Finish. Windows formats the new partition and shows it as a new drive.
+
+5. Repeat for Additional Drives
+
+If you want more than one new drive:
+
+Either shrink the C: drive again if there’s more space, or
+
+Create multiple smaller volumes from any remaining Unallocated space.
+
+6. Verify
+
+Open Computer (Windows Explorer). You should now see the new drives (e.g., D:, E:, etc.), ready for use.
