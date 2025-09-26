@@ -1,0 +1,165 @@
+### AVAILABILITY 
+## 1️⃣ Enable the Network Adapter
+
+Make sure the physical NICs are up and recognized.
+
+1. **List interfaces**
+
+   ```bash
+   ip link show
+   ```
+
+   or
+
+   ```bash
+   nmcli device
+   ```
+
+2. **Bring interface up** (replace `eth0` with your interface name):
+
+   ```bash
+   sudo ip link set eth0 up
+   ```
+
+   or, if using NetworkManager:
+
+   ```bash
+   sudo nmcli device connect eth0
+   ```
+
+---
+
+## 2️⃣ Install Required Packages
+
+Depending on your distro:
+
+* **RHEL/CentOS/Fedora**
+
+  ```bash
+  sudo yum install -y teamd
+  ```
+* **Debian/Ubuntu**
+
+  ```bash
+  sudo apt-get install -y ifenslave
+  ```
+
+These packages provide the kernel modules and tools for bonding or teaming.
+
+---
+
+## 3️⃣ Load the Bonding Module
+
+Make sure the bonding kernel module is loaded:
+
+```bash
+sudo modprobe bonding
+```
+
+To load at boot, add `bonding` to `/etc/modules` (Debian/Ubuntu) or create a conf file in `/etc/modules-load.d/`.
+
+---
+
+## 4️⃣ Configure NIC Bonding (Classic Method)
+
+### a. Create the Bond Interface
+
+Create a configuration file such as `/etc/sysconfig/network-scripts/ifcfg-bond0` (RHEL-based) or in `/etc/network/interfaces` (Debian-based).
+Example for RHEL:
+
+```
+DEVICE=bond0
+NAME=bond0
+TYPE=Bond
+BOOTPROTO=dhcp
+ONBOOT=yes
+BONDING_OPTS="mode=active-backup miimon=100"
+```
+
+Common modes:
+
+* `mode=0` (balance-rr)
+* `mode=1` (active-backup) – most common for redundancy
+* `mode=4` (802.3ad) – requires switch support (LACP)
+
+### b. Configure Slave Interfaces
+
+For each NIC (e.g., `eth0`, `eth1`), edit/create:
+
+```
+DEVICE=eth0
+BOOTPROTO=none
+ONBOOT=yes
+MASTER=bond0
+SLAVE=yes
+```
+
+Repeat for each slave.
+
+### c. Restart Network
+
+```bash
+sudo systemctl restart network   # RHEL/CentOS
+```
+
+or
+
+```bash
+sudo ifup bond0
+```
+
+---
+
+## 5️⃣ Configure NIC Teaming (teamd Method)
+
+1. Create a JSON configuration file (example `/etc/teamd/team0.conf`):
+
+   ```json
+   {
+     "device": "team0",
+     "runner": {"name": "activebackup"},
+     "ports": {"eth0": {}, "eth1": {}}
+   }
+   ```
+
+2. Start the team interface:
+
+   ```bash
+   sudo teamd -g -f /etc/teamd/team0.conf -d
+   ```
+
+3. Bring it up:
+
+   ```bash
+   sudo ip link set team0 up
+   ```
+
+---
+
+## 6️⃣ Verify
+
+Check status and slaves:
+
+```bash
+cat /proc/net/bonding/bond0
+```
+
+or
+
+```bash
+teamdctl team0 state
+```
+
+You should see both interfaces listed and the current active port.
+
+---
+
+### Quick Summary
+
+1. **Enable NICs** – `ip link set ethX up`.
+2. **Install Tools** – `teamd` for teaming or `ifenslave` for bonding.
+3. **Load bonding module** – `modprobe bonding`.
+4. **Configure bond/team interface** with appropriate mode (active-backup, LACP, etc.).
+5. **Restart network** and **verify**.
+
+These steps work across most modern Linux distributions with minor path or service-name adjustments.
